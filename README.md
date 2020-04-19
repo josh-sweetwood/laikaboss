@@ -186,6 +186,47 @@ $ ./cloudscan.py ~/test_files/testfile.cws.swf | jq '.scan_result[] | { "file ty
 }
 ```
 
+#### Containerized instance (Work In Progress)
+
+The Docker related files in the main source directory (`docker-compose.yml`, `Dockerfile.syncbroker`, and `Dockerfile.worker`) will build container-ready versions of a Laika BOSS SyncBroker (`laikaboss_syncbroker.py`) and a worker (`laikaboss_worker.py`).  These two containers can be run using the compose file to start as many brokers and workers as desired.  This can be easily scaled to any number of workers and/or brokers needed within Compose or evan a Docker Swarm cluster.
+
+##### Build and start the containers
+```console
+# docker-compose build
+# docker-compose up -d
+```
+
+##### Scale up to 16 workers (just as an example, you can scale to whatever you'd like)
+```console
+# docker-compose scale workers=16
+```
+
+##### Monitor the broker logs
+```console
+# docker-compose logs -f broker
+```
+
+##### Monitor the worker logs
+```console
+# docker-compose logs -f worker
+```
+
+##### Shut down the cluster
+```console
+# docker-compose down
+```
+
+##### Notes on this Work In Progress
+This containerization branch is currently a work in progress but I wanted to check in my updates so that they exist on more than just my laptop.  I still have some work to do here, namely:
+- Get some (or all) of the configuration to be overridable via environment variables, particularly the `-w` address for the workers
+- Try thinning the containers down as much as possible - maybe basing them on a slimmer Linux distro image
+- Test the behavior when workers (or brokers) die / are killed in a non-graceful manner, and potentially make code updates to handle these situations well
+- Figure out if there's a better way to gracefully shut down the broker - for now I've added a periodic interruption to the ZMQ polling that handles this
+- I've monkey-patched the Python syslog libraries (`monkey_syslog.py`) to get all of the Laika BOSS logging to send to STDOUT / STDERR, but the output format of this monkey-patched verson is hard-coded - I should determine if there's a better format that could be used for this
+
+###### Future work
+Even further down the road, I'm interested in testing out other proof-of-concept ideas for this containerization approach.  The main one would be the potential for completely removing the broker / worker concept altogether and just creating one single-threaded "scanner" application that presents the same clientLib / ZMQ front-end to any Laika BOSS clients, but directly performs scanning of objects sent to it, using Docker / Docker Swarm's load balancing and routing mesh to handle the incoming connections to all instances of this "scanner" container in a cluster.  This could simplify the software even further, if it works and performs well.
+
 #### Milter
 
 The Laika BOSS milter server allows you to integrate Laika BOSS with mail transfer agents such as Sendmail or Postfix. This enables better visibility (passive visibility can be hampered by TLS) and provides a means to block email according to Laika BOSS disposition.

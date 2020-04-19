@@ -24,10 +24,11 @@ setup(
     keywords = "malware",
     url = "https://github.com/lmco/laikaboss/",
     packages = find_packages(),
-    data_files = [ ('/etc/laikaboss', ['etc/dist/laikaboss.conf', 'etc/dist/laikad.conf', 
+    data_files = [ ('/etc/laikaboss', ['etc/dist/laikaboss.conf', 'etc/dist/laikad.conf',
+                                       'etc/dist/laikaboss_syncbroker.conf', 'etc/dist/laikaboss_worker.conf',
                                        'etc/framework/dispatch.yara', 'etc/framework/conditional-dispatch.yara',
                                        'etc/cloudscan/cloudscan.conf']),
                    ('/etc/laikaboss/modules/scan-yara', ['etc/modules/signatures.yara']),
                    ('/etc/laikaboss/modules/dispositioner', ['etc/modules/disposition.yara'])],
-    scripts = [ "laika.py", "laikad.py", "cloudscan.py" ],
+    scripts = [ "laika.py", "laikad.py", "cloudscan.py", "laikaboss_syncbroker.py", "laikaboss_worker.py", "monkey_syslog.py" ],
 )

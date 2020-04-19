@@ -1,0 +1,66 @@
+# This Docker image encapsulates the SyncBroker from the Laika BOSS: Object Scanning System by 
+# Lockheed Martin Corporation from https://github.com/lmco/laikaboss 
+#
+# To run this image after installing Docker using a standalone instance, use a command like 
+# the following:
+#
+# sudo docker run --rm -it -p 5558:5558 laikaboss_syncbroker:latest
+#
+# This broker image is intended to run in conjunction with the Worker image also in this repostory.
+# Refer to that Dockerfile (Dockerfile.worker) for details on how to run that image.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+# 
+#     http://www.apache.org/licenses/LICENSE-2.0
+# 
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
+FROM ubuntu:18.04
+MAINTAINER Josh Sweetwood (@josh-sweetwood)
+
+ENV DEBIAN_FRONTEND noninteractive
+
+USER root
+RUN apt-get update && \
+  apt-get upgrade -y && \
+  apt-get install -y python-progressbar python-pip && \
+  pip install interruptingcow && \
+  apt-get install -y libzmq5 python-zmq python-gevent python-pexpect
+
+# Add nonroot user, clone repo and setup environment
+RUN groupadd -r nonroot && \
+  useradd -r -g nonroot -d /home/nonroot -s /sbin/nologin -c "Nonroot User" nonroot && \
+  mkdir /home/nonroot && \
+  mkdir /home/nonroot/laikaboss && \
+  chown -R nonroot:nonroot /home/nonroot
+
+# Run setup script to install Laika BOSS framework, client library, modules and associated scripts (laika.py, laikad.py, cloudscan.py)
+COPY [".", "/home/nonroot/laikaboss/"]
+RUN cd /home/nonroot/laikaboss/ && \
+  python setup.py build && \
+  python setup.py install
+
+# Clean up and run ldconfig
+RUN ldconfig && \
+  apt-get remove -y --purge automake build-essential libtool && \
+  apt-get autoremove -y --purge && \
+  apt-get clean -y && \
+  rm -rf /var/lib/apt/lists/*
+
+USER nonroot
+ENV HOME /home/nonroot
+ENV USER nonroot
+WORKDIR /home/nonroot/workdir
+
+EXPOSE 5558
+
+ENTRYPOINT ["laikaboss_syncbroker.py", "-b", "tcp://*:5559"]
+
+#CMD ["laikaboss_syncbroker.py"]
