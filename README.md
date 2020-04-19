@@ -219,6 +219,7 @@ The Docker related files in the main source directory (`docker-compose.yml`, `Do
 ##### Notes on this Work In Progress
 This containerization branch is currently a work in progress but I wanted to check in my updates so that they exist on more than just my laptop.  I still have some work to do here, namely:
 - Get some (or all) of the configuration to be overridable via environment variables, particularly the `-w` address for the workers
+- Get LOG_FLUENT /fluentd working in some fashion
 - Try thinning the containers down as much as possible - maybe basing them on a slimmer Linux distro image
 - Test the behavior when workers (or brokers) die / are killed in a non-graceful manner, and potentially make code updates to handle these situations well
 - Figure out if there's a better way to gracefully shut down the broker - for now I've added a periodic interruption to the ZMQ polling that handles this
