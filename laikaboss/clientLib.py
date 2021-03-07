@@ -26,6 +26,9 @@ from random import randint
 import json
 import traceback
 import uuid
+import base64
+import zlib
+from laikaboss.constants import level_minimal, level_metadata, level_full
 from laikaboss.objectmodel import QuitScanException
 from copy import deepcopy as clone_object
 
@@ -112,7 +115,7 @@ def get_scanObjectUID(scanObject):
     '''
     return scanObject.uuid
 
-def getJSON(result):
+def getJSON(result, level=level_metadata):
     '''
     This function takes the result of a scan, and returns the JSON output.
 
@@ -123,7 +126,7 @@ def getJSON(result):
     A string representation of the json formatted output.
     '''
     resultText = ''
-
+ 
     # Build the results portion of the log record. This will be a list of
     # dictionaries, where each dictionary is the result of a single buffer's
     # scan. The list will contain all of the buffers that were exploded from
@@ -134,7 +137,19 @@ def getJSON(result):
         buffer_result = clone_object(scan_object.__dict__)
         # Don't log buffers here, just metadata
         if "buffer" in buffer_result:
-            del buffer_result["buffer"]
+            if level == level_full:
+                # Compress the buffer
+                compressed_buffer = zlib.compress(buffer_result["buffer"])
+                # B64 encode the compressed buffer
+                base64_encoded_buffer = base64.b64encode(compressed_buffer)
+                base64_string = base64_encoded_buffer.decode('utf-8')
+                # Replace the original buffer with the compressed and B64 encoded string
+                buffer_result["buffer"] = base64_string
+            else:
+                del buffer_result["buffer"]
+        # Remove metadata if the level is minimal
+        if "moduleMetadata" in buffer_result and level == level_minimal:
+            del buffer_result["moduleMetadata"]
         buffer_results[buffer_result["order"]] = buffer_result
 
     # Construct the log record with fields useful for log processing and

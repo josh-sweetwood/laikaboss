@@ -228,6 +228,9 @@ This containerization branch is currently a work in progress but I wanted to che
 ###### Future work
 Even further down the road, I'm interested in testing out other proof-of-concept ideas for this containerization approach.  The main one would be the potential for completely removing the broker / worker concept altogether and just creating one single-threaded "scanner" application that presents the same clientLib / ZMQ front-end to any Laika BOSS clients, but directly performs scanning of objects sent to it, using Docker / Docker Swarm's load balancing and routing mesh to handle the incoming connections to all instances of this "scanner" container in a cluster.  This could simplify the software even further, if it works and performs well.
 
+###### REST-based work
+I'm also checking in a bunch of nearly-done work to containerize the scanner as a REST (Flask) ineterface instead of using ZMQ at all.  I'm not sure how well this might pan out from a performance perspective, but having the ability to start up a cluster of containerized, REST-based scanners seems like it could be very useful.
+
 #### Milter
 
 The Laika BOSS milter server allows you to integrate Laika BOSS with mail transfer agents such as Sendmail or Postfix. This enables better visibility (passive visibility can be hampered by TLS) and provides a means to block email according to Laika BOSS disposition.

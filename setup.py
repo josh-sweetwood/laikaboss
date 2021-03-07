@@ -30,5 +30,6 @@ setup(
                                        'etc/cloudscan/cloudscan.conf']),
                    ('/etc/laikaboss/modules/scan-yara', ['etc/modules/signatures.yara']),
                    ('/etc/laikaboss/modules/dispositioner', ['etc/modules/disposition.yara'])],
-    scripts = [ "laika.py", "laikad.py", "cloudscan.py", "laikaboss_syncbroker.py", "laikaboss_worker.py", "monkey_syslog.py" ],
+    py_modules = [ "monkey_syslog" ],
+    scripts = [ "laika.py", "laikad.py", "cloudscan.py", "laikaboss_syncbroker.py", "laikaboss_worker.py" ],
 )

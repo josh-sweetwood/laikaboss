@@ -1,0 +1,47 @@
+FROM python:2-alpine
+
+MAINTAINER Josh Sweetwood (@josh-sweetwood)
+
+USER root
+RUN echo "http://dl-cdn.alpinelinux.org/alpine/edge/testing" >> /etc/apk/repositories && \
+    apk add yara wget unzip xz-dev perl-image-exiftool automake autoconf libtool build-base libffi-dev unrar python-dev swig && \
+    pip install --upgrade pip && \
+    pip install flask yara progressbar ipy pyclamd msgpack==0.6.2 cffi fluent-logger olefile py-unrar2 pylzma javatools && \
+    BUILD_LIB=1 pip install ssdeep && \
+    wget https://github.com/smarnach/pyexiftool/archive/master.zip && \
+    unzip master.zip && \
+    cd pyexiftool-master && \
+    python setup.py build && \
+    python setup.py install && \
+    wget https://github.com/erocarrera/pefile/archive/pefile-1.2.10-139.tar.gz && \
+    tar vxzf pefile-1.2.10-139.tar.gz && \
+    cd pefile-pefile-1.2.10-139 && \
+    sed -i "s/__revision__ = \"\$LastChangedRevision\$\"/__revision__ = \"\$LastChangedRevision: 139 \$\"/g" pefile.py && \
+    python setup.py build && \
+    python setup.py install && \
+#   **Add nonroot user, clone repo and setup environment**
+    addgroup --system nonroot && \
+    adduser --system --ingroup nonroot --home /home/nonroot --shell /sbin/nologin --gecos "Nonroot User" nonroot && \
+    mkdir /home/nonroot/laikaboss /home/nonroot/workdir && \
+    chown -R nonroot:nonroot /home/nonroot
+#   **Clean up a bit**
+#    apk del wget unzip xz-dev automake autoconf libtool build-base libffi-dev python-dev && \
+#    rm -Rf /var/cache/apk/*
+
+# Run setup script to install Laika BOSS framework, client library, modules and associated scripts (laika.py, laikad.py, cloudscan.py)
+COPY [".", "/home/nonroot/laikaboss/"]
+RUN cd /home/nonroot/laikaboss/ && \
+    python setup.py build && \
+    python setup.py install
+
+COPY ["etc/dist/laikaboss.container.conf", "/etc/laikaboss/laikaboss.conf"]
+RUN ln -s /usr/local/lib/python2.7/site-packages/laikaboss-2.0-py2.7.egg/EGG-INFO/scripts/monkey_syslog.py .
+
+#USER nonroot
+#ENV HOME /home/nonroot
+#ENV USER nonroot
+WORKDIR /home/nonroot/workdir
+
+EXPOSE 80
+
+CMD ["sh"]
